@@ -6,8 +6,12 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule], // hier ist NgFor, NgIf, NgStyle usw. drin
   templateUrl: './game.component.html',
-  styleUrls: ['./game.component.scss']
+  styleUrls: ['./game.component.scss'],
 })
 export class GameComponent {
-  // dein Code
+  pickCardAnimation = false;
+
+  takeCard() {
+    this.pickCardAnimation = true;
+  }
 }
