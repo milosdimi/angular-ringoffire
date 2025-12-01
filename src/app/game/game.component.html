@@ -1,8 +1,8 @@
 <section class="field">
   <div class="card-stack">
-    
+
     <!-- Karten im Stapel -->
-    <img 
+    <img
       *ngFor="let c of [0,1,2,3,4]; let i = index"
       class="stack-card"
       [style.right.px]="i * 5"
@@ -18,12 +18,20 @@
       alt="Top Card"
     />
 
+    <!-- Ablagestapel -->
+    <img
+      *ngFor="let card of game.playedCard"
+      class="played-card"
+      [src]="'assets/img/cards/' + card + '.png'"
+      alt="Discard Pile Top Card"
+    />
+
     <!-- Animierte Karte beim Ziehen -->
     <img
       *ngIf="pickCardAnimation"
       class="pick-card"
-      src="assets/img/cards/{{ currentCard }}.png"
-      alt="Ace"
+      [src]="'assets/img/cards/' + currentCard + '.png'"
+      alt="Picked Card"
     />
   </div>
 </section>

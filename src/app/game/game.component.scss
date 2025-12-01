@@ -39,11 +39,24 @@
   }
 }
 
+.played-card {
+  position: absolute;
+  right: 25px;
+  transform: scale(1.2) translate(140px, -230px) rotate(10deg);
+}
+
+.played-card:nth-child(1) {
+  transform: scale(1.2) translate(140px, -230px) rotate(8deg);
+}
+.played-card:nth-child(2) {
+  transform: scale(1.2) translate(142px, -232px) rotate(12deg);
+}
+
 /* Animierte Karte */
 .pick-card {
   right: 25px;
   z-index: 20;
-  animation: pick-card-animation 0.9s ease-in-out forwards;
+  animation: pick-card-animation 1s ease-in-out forwards;
 }
 
 @keyframes pick-card-animation {
