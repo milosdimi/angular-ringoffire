@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Games } from '../../models/games';
 
 @Component({
   selector: 'app-game',
@@ -10,6 +11,10 @@ import { CommonModule } from '@angular/common';
 })
 export class GameComponent {
   pickCardAnimation = false;
+  games: Games = new Games();
+  newGame() {
+    this.games = new Games();
+  }
 
   takeCard() {
     this.pickCardAnimation = true;

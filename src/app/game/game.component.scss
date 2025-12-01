@@ -14,39 +14,49 @@
   position: relative;
   width: 200px;
   height: 300px;
+
   img {
     position: absolute;
     top: 0;
-
     width: 150px;
   }
 }
 
+/* Karten im Stapel */
+.stack-card {
+  pointer-events: none; /* damit sie nicht anklickbar sind */
+}
+
+/* Oberste Karte – die anklickbare */
 .top-card {
   cursor: pointer;
-
-  transition: all 125ms ease-in-out;
+  transition: transform 150ms ease-in-out;
+  right: 25px; /* neue Position hier */
+  z-index: 10;
 
   &:hover {
     transform: scale(1.1) translateY(-10px);
   }
 }
 
+/* Animierte Karte */
 .pick-card {
-  animation: pick-card-animation 1s ease-in-out;
-  transform: scale(1.3) translateX(140px) translateY(-180px) rotate(10deg);
+  right: 25px;
+  z-index: 20;
+  animation: pick-card-animation 0.9s ease-in-out forwards;
 }
+
 @keyframes pick-card-animation {
   0% {
-    transform: scale(1);
+    transform: scale(1) translate(0, 0);
   }
   40% {
-    transform: scale(1.7);
+    transform: scale(1.4);
   }
   60% {
-    transform: scale(1.7);
+    transform: scale(1.4);
   }
   100% {
-    transform: scale(1.3) translateX(140px) translateY(-180px) rotate(10deg);
+    transform: scale(1.2) translate(140px, -230px) rotate(10deg);
   }
 }
