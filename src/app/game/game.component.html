@@ -1,40 +1,23 @@
-<app-player style="top: 130px;" class="player-position"></app-player>
-
+<app-player *ngFor="let player of game.players; let i = index" [ngStyle]="{'top.px': 100 + (i * 120)}"
+    [name]="player"
+  class="player-position"></app-player>
 
 <section class="field">
   <div class="card-stack">
 
     <!-- Karten im Stapel -->
-    <img
-      *ngFor="let c of [0,1,2,3,4]; let i = index"
-      class="stack-card"
-      [style.right.px]="i * 5"
-      src="assets/img/cards/card_cover.png"
-      alt="Card Cover"
-    />
+    <img *ngFor="let c of [0,1,2,3,4]; let i = index" class="stack-card" [style.right.px]="i * 5"
+      src="assets/img/cards/card_cover.png" alt="Card Cover" />
 
     <!-- Obere Karte / zum Ziehen -->
-    <img
-      (click)="takeCard()"
-      class="top-card"
-      src="assets/img/cards/card_cover.png"
-      alt="Top Card"
-    />
+    <img (click)="takeCard()" class="top-card" src="assets/img/cards/card_cover.png" alt="Top Card" />
 
     <!-- Ablagestapel -->
-    <img
-      *ngFor="let card of game.playedCard"
-      class="played-card"
-      [src]="'assets/img/cards/' + card + '.png'"
-      alt="Discard Pile Top Card"
-    />
+    <img *ngFor="let card of game.playedCard" class="played-card" [src]="'assets/img/cards/' + card + '.png'"
+      alt="Discard Pile Top Card" />
 
     <!-- Animierte Karte beim Ziehen -->
-    <img
-      *ngIf="pickCardAnimation"
-      class="pick-card"
-      [src]="'assets/img/cards/' + currentCard + '.png'"
-      alt="Picked Card"
-    />
+    <img *ngIf="pickCardAnimation" class="pick-card" [src]="'assets/img/cards/' + currentCard + '.png'"
+      alt="Picked Card" />
   </div>
 </section>
