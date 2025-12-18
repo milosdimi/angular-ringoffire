@@ -22,7 +22,7 @@ import { MatButtonModule } from '@angular/material/button';
   styleUrls: ['./dialog-add-player.component.scss'], // wichtig: styleUrls (plural)
 })
 export class DialogAddPlayerComponent {
-  name = '';
+  name: string = '';
 
   constructor(
     public dialogRef: MatDialogRef<DialogAddPlayerComponent>,
