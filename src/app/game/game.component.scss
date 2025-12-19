@@ -83,3 +83,10 @@
   bottom: 32px;
   right: 32px;
 }
+
+.game-info-wrapper {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+}
