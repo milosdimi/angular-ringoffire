@@ -1,14 +1,14 @@
 .player {
   display: flex;
   align-items: center;
-  background-color: orange;
+  background-color: rgba(50, 50, 50, 0.8);
   width: 300px;
   border-top-left-radius: 50px;
   border-bottom-left-radius: 50px;
 
   img {
-    width: 100px;
-    height: 100px;
+    width: 70px;
+    height: 70px;
     object-fit: cover;
     border-radius: 100%;
   }
@@ -19,5 +19,10 @@
     gap: 10px;
     font-size: 1.2rem;
   }
+}
+
+.player-active {
+  background-color: orange !important;
+  box-shadow: 0 0 10px 5px red;
 }
 
