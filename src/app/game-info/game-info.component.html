@@ -1,18 +1,19 @@
 <mat-card class="game-info-card">
-    <mat-card-title>Ring of Fire</mat-card-title>
+    <mat-card-title>Game Rules</mat-card-title>
 
     <mat-card-content>
-        <p>
-            Draw a card and follow the rule shown on it.
+        <!-- Wenn noch keine Karte gezogen wurde -->
+        <p *ngIf="!card">Draw a card to see the rule.</p>
+
+        <!-- Wenn die Karte keine Regel findet (Fallback) -->
+        <p *ngIf="card && !currentAction">
+            No rule found for: <strong>{{ card }}</strong>
         </p>
 
-        <p>
-            Each card has a special meaning.
-            The current player must perform the action.
-        </p>
-
-        <p>
-            Play continues clockwise.
-        </p>
+        <!-- Regel zur aktuellen Karte -->
+        <ng-container *ngIf="currentAction">
+            <h3>{{ currentAction.card }} – {{ currentAction.title }}</h3>
+            <p>{{ currentAction.description }}</p>
+        </ng-container>
     </mat-card-content>
 </mat-card>
