@@ -8,12 +8,17 @@ import { Component, Input } from '@angular/core';
 })
 export class PlayerComponent {
   @Input() name: string = '';
+  @Input() avatar: string = 'man.png';
   @Input() playerActive: boolean = false;
 
-  
-  @Input() avatar: string = 'man.png';
+
+  @Input() compact: boolean = false;
 
   get avatarSrc(): string {
     return `assets/img/profile/${this.avatar}`;
+  }
+
+  get initials(): string {
+    return (this.name || '?').trim().slice(0, 1).toUpperCase();
   }
 }

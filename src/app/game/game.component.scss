@@ -1,3 +1,4 @@
+/* ===== Game Field ===== */
 .field {
   width: 100vw;
   height: 100vh;
@@ -8,8 +9,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 }
 
+/* ===== Cards ===== */
 .card-stack {
   position: relative;
   width: 200px;
@@ -22,16 +25,14 @@
   }
 }
 
-/* Karten im Stapel */
 .stack-card {
-  pointer-events: none; /* damit sie nicht anklickbar sind */
+  pointer-events: none;
 }
 
-/* Oberste Karte – die anklickbare */
 .top-card {
   cursor: pointer;
   transition: transform 150ms ease-in-out;
-  right: 25px; /* neue Position hier */
+  right: 25px;
   z-index: 10;
 
   &:hover {
@@ -40,19 +41,10 @@
 }
 
 .played-card {
-  position: absolute;
   right: 25px;
   transform: scale(1.2) translate(140px, -230px) rotate(10deg);
 }
 
-.played-card:nth-child(1) {
-  transform: scale(1.2) translate(140px, -230px) rotate(8deg);
-}
-.played-card:nth-child(2) {
-  transform: scale(1.2) translate(142px, -232px) rotate(12deg);
-}
-
-/* Animierte Karte */
 .pick-card {
   right: 25px;
   z-index: 20;
@@ -63,9 +55,7 @@
   0% {
     transform: scale(1) translate(0, 0);
   }
-  40% {
-    transform: scale(1.4);
-  }
+  40%,
   60% {
     transform: scale(1.4);
   }
@@ -74,19 +64,71 @@
   }
 }
 
-.player-position {
-  position: absolute;
-  right: 0;
-}
+/* ===== Floating Buttons / UI ===== */
 .add-player-button {
-  position: absolute;
-  bottom: 32px;
-  right: 32px;
+  position: fixed;
+  top: calc(14px + env(safe-area-inset-top));
+  right: 16px;
+  z-index: 1200;
 }
 
+/* ===== Game Info =====
+   (wenn du es unten möchtest, stell bottom/left ein; so stört es weniger) */
 .game-info-wrapper {
   position: fixed;
-  top: 16px;
   left: 16px;
-  z-index: 10;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 1100;
+}
+
+/* ===== Players (Desktop default) =====
+   Rechts als Liste, scrollbar */
+.players {
+  position: fixed;
+  right: 0px;
+  top: calc(90px + env(safe-area-inset-top));
+  z-index: 1100;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  max-height: calc(100vh - 140px);
+  overflow: auto;
+
+}
+
+/* Scrollbar (optional) */
+.players::-webkit-scrollbar {
+  width: 6px;
+}
+.players::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+/* ===== Mobile: Kugeln links (wie deine Skizze) ===== */
+@media (max-width: 700px) {
+  .players {
+    left: 10px;
+    right: auto;
+    top: calc(90px + env(safe-area-inset-top));
+
+    /* Kugel-Liste links */
+    flex-direction: column;
+    gap: 10px;
+
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    padding-right: 0;
+  }
+
+  /* Game-Info auf Mobile etwas weiter nach rechts,
+     damit es nicht direkt unter den Kugeln liegt */
+  .game-info-wrapper {
+    left: 72px;
+    right: 12px;
+  }
 }

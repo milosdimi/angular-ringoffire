@@ -115,4 +115,8 @@ export class GameComponent implements OnInit {
     this.game.currentPlayer =
       this.game.currentPlayer % this.game.players.length;
   }
+
+  get isMobile(): boolean {
+    return window.innerWidth <= 700;
+  }
 }
