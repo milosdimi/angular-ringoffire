@@ -95,6 +95,20 @@
   color: #ffffff;
 }
 
+/* Red cards (hearts & diamonds) */
+.red-card {
+  .rule-name {
+    color: #ff5c5c;
+    text-shadow: 0 4px 14px rgba(255, 80, 80, 0.45);
+  }
+
+  .chip {
+    background: linear-gradient(135deg, #ff9a9a, #ff5c5c);
+    color: #2a0f0f;
+    box-shadow: 0 4px 16px rgba(255, 80, 80, 0.6);
+  }
+}
+
 .rule-desc {
   margin: 12px 0 0;
   font-size: 16px;

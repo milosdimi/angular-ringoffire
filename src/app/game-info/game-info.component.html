@@ -2,7 +2,7 @@
     <div class="header">
         <div class="title">Game Rules</div>
 
-        <!-- Optional: später close -->
+
         <!-- <button mat-icon-button aria-label="Close"><mat-icon>close</mat-icon></button> -->
     </div>
 
@@ -17,7 +17,7 @@
 
         <!-- Regel zur aktuellen Karte -->
         <ng-container *ngIf="currentAction">
-            <div class="rule">
+            <div class="rule" [class.red-card]="isRedCard">
                 <div class="rule-title">
                     <span class="chip">{{ currentAction.card }}</span>
                     <span class="rule-name">{{ currentAction.title }}</span>

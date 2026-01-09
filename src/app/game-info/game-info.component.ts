@@ -18,7 +18,7 @@ interface CardAction {
 export class GameInfoComponent {
   @Input() card: string = '';
 
-   readonly cardAction: CardAction[] = [
+  readonly cardAction: CardAction[] = [
     {
       card: 'Ace',
       title: 'Waterfall',
@@ -98,5 +98,10 @@ export class GameInfoComponent {
     if (n === 13) return 'King';
 
     return String(n); // "2".."10"
+  }
+
+  get isRedCard(): boolean {
+    if (!this.card) return false;
+    return this.card.includes('hearts') || this.card.includes('diamonds');
   }
 }
