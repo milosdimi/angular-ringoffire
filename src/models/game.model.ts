@@ -2,7 +2,6 @@ export interface Player {
   name: string;
   avatar: string;
 }
-
 export class GameModel {
   public players: Player[] = [];      
   public stack: string[] = [];

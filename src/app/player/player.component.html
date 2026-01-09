@@ -1,13 +1,11 @@
 <div class="player" [class.player-active]="playerActive" [class.compact]="compact">
   <img [src]="avatarSrc" [alt]="name" />
 
-  <!-- Name nur im Desktop Mode -->
   @if (!compact) {
-    <span class="name">{{ name }}</span>
+  <span class="name">{{ name }}</span>
   }
 
-  <!-- Optional: Initiale im Compact (wenn du willst) -->
   @if (compact) {
-    <span class="initials">{{ initials }}</span>
+  <span class="initials">{{ initials }}</span>
   }
 </div>

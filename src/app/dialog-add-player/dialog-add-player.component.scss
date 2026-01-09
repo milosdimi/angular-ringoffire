@@ -1,0 +1,32 @@
+.title {
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  margin: 0;
+}
+
+.content {
+  padding-top: 6px;
+}
+
+.subtitle {
+  margin: 0 0 12px;
+  opacity: 0.85;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 420px) {
+  .actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+
+  }
+}

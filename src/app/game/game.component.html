@@ -1,38 +1,69 @@
-<!-- PLAYER -->
-<div class="players">
-  <app-player *ngFor="let p of game.players; let i = index" [name]="p.name" [avatar]="p.avatar"
-    [playerActive]="i === game.currentPlayer" [compact]="isMobile">
-  </app-player>
-</div>
+<div class="game-root" [class.dialog-open]="isDialogOpen">
 
-
-<!-- GAME FIELD -->
-<section class="field">
-  <div class="card-stack">
-
-    <!-- Karten im Stapel -->
-    <img *ngFor="let c of [0,1,2,3,4]; let i = index" class="stack-card" [style.right.px]="i * 5"
-      src="assets/img/cards/card_cover.png" alt="Card Cover" />
-
-    <!-- Obere Karte / zum Ziehen -->
-    <img (click)="takeCard()" class="top-card" src="assets/img/cards/card_cover.png" alt="Top Card" />
-
-    <!-- Ablagestapel -->
-    <img *ngFor="let card of game.playedCard" class="played-card" [src]="'assets/img/cards/' + card + '.png'"
-      alt="Discard Pile Top Card" />
-
-    <!-- Animierte Karte -->
-    <img *ngIf="pickCardAnimation" class="pick-card" [src]="'assets/img/cards/' + currentCard + '.png'"
-      alt="Picked Card" />
+  <!-- PLAYER LIST -->
+  <div class="players">
+    <app-player
+      *ngFor="let p of game.players; let i = index"
+      [name]="p.name"
+      [avatar]="p.avatar"
+      [playerActive]="i === game.currentPlayer"
+      [compact]="isMobile">
+    </app-player>
   </div>
-</section>
 
-<!-- GAME INFO -->
-<div class="game-info-wrapper">
-  <app-game-info [card]="currentCard"></app-game-info>
+  <!-- GAME FIELD -->
+  <section class="field" [class.mobile]="isMobile">
+    <div class="card-stack">
+
+      <!-- Karten im Stapel -->
+      <img
+        *ngFor="let c of [0,1,2,3,4]; let i = index"
+        class="stack-card"
+        [style.right.px]="i * 5"
+        src="assets/img/cards/card_cover.png"
+        alt="Card Cover"
+      />
+
+      <!-- Obere Karte / zum Ziehen -->
+      <img
+        (click)="takeCard()"
+        class="top-card"
+        src="assets/img/cards/card_cover.png"
+        alt="Top Card"
+      />
+
+      <!-- Ablagestapel: nur die letzte Karte anzeigen -->
+      <img
+        *ngIf="game.playedCard.length"
+        class="played-card"
+        [src]="'assets/img/cards/' + game.playedCard[game.playedCard.length - 1] + '.png'"
+        alt="Discard Pile Top Card"
+      />
+
+      <!-- Animierte Karte -->
+      <img
+        *ngIf="pickCardAnimation"
+        class="pick-card"
+        [src]="'assets/img/cards/' + currentCard + '.png'"
+        alt="Picked Card"
+      />
+    </div>
+  </section>
+
+  <!-- GAME INFO -->
+  <div class="game-info-wrapper">
+    <app-game-info [card]="currentCard"></app-game-info>
+  </div>
+
+  <!-- ADD PLAYER BUTTON -->
+  <button
+    mat-fab
+    class="add-player-button game-fab"
+    (click)="openAddPlayerDialog()"
+    [disabled]="isDialogOpen"
+    aria-label="Add player"
+  >
+    <mat-icon>add</mat-icon>
+  </button>
+
 </div>
-
-<!-- ADD PLAYER BUTTON -->
-<button mat-fab color="primary" class="add-player-button" (click)="openAddPlayerDialog()">
-  <mat-icon>add</mat-icon>
-</button>

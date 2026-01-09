@@ -2,15 +2,12 @@
   display: flex;
   align-items: center;
   gap: 14px;
-
   padding: 10px 14px 10px 10px;
   width: 320px;
-
   background: rgba(20, 20, 20, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-top-left-radius: 999px;
   border-bottom-left-radius: 999px;
-
   backdrop-filter: blur(8px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 
@@ -19,7 +16,6 @@
     height: 62px;
     border-radius: 50%;
     object-fit: cover;
-
     border: 2px solid rgba(255, 255, 255, 0.18);
   }
 
@@ -43,22 +39,23 @@
   }
 }
 
-/* ✅ COMPACT MODE: nur Kugel */
+
 .player.compact {
-  width: auto;
-  padding: 0;
+  width: 54px;
+  height: 54px;
   background: transparent;
   border: none;
   box-shadow: none;
   backdrop-filter: none;
-
+  overflow: visible; 
   position: relative;
 
   img {
-    width: 54px;
-    height: 54px;
-    border: 2px solid rgba(255, 255, 255, 0.18);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    width: 100%;
+    height: 100%;
+    display: block; 
+    border-radius: 50%;
+    object-fit: cover;
   }
 
   .initials {
@@ -85,7 +82,7 @@
 .player.compact.player-active::after {
   content: "";
   position: absolute;
-  inset: -6px; /* Ring etwas größer als Avatar */
+  inset: 2px; 
   border-radius: 999px;
 
   border: 2px solid rgba(255, 195, 70, 0.65);
@@ -101,13 +98,12 @@
 .player.player-active::after {
   content: "";
   position: absolute;
-  left: 12px; /* rund um das Avatar */
+  left: 6px; 
   top: 50%;
   width: 70px;
   height: 70px;
   transform: translateY(-50%);
   border-radius: 999px;
-
   border: 2px solid rgba(255, 195, 70, 0.35);
   animation: player-pulse-soft 1.6s ease-out infinite;
   pointer-events: none;

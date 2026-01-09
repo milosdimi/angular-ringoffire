@@ -84,7 +84,7 @@ export class GameInfoComponent {
   }
 
   private normalizeCard(card: string): string {
-    // erwartet z.B. "hearts_12"
+  
     const parts = card.split('_');
     const raw = parts[1]; // "12"
 

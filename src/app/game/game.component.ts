@@ -1,5 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  OnInit,
+  Inject,
+  PLATFORM_ID,
+  HostListener,
+} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -29,7 +35,12 @@ export class GameComponent implements OnInit {
   currentCard = '';
   game: GameModel = new GameModel();
 
-  // Avatar Pool (deine Dateien in assets/img/profile/)
+  isMobile = false;
+  isDialogOpen = false;
+
+  private readonly mobileWidth = 700;
+  private readonly isBrowser: boolean;
+
   private readonly avatars: string[] = [
     'cow.png',
     'death.png',
@@ -39,23 +50,35 @@ export class GameComponent implements OnInit {
     'race.png',
   ];
 
-  constructor(private dialog: MatDialog) {}
+  constructor(
+    private dialog: MatDialog,
+    @Inject(PLATFORM_ID) platformId: object
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+
+    if (this.isBrowser) {
+      this.isMobile = window.innerWidth <= this.mobileWidth;
+    }
+  }
 
   ngOnInit(): void {
     this.newGame();
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (!this.isBrowser) return;
+    this.isMobile = window.innerWidth <= this.mobileWidth;
   }
 
   newGame(): void {
     this.game = new GameModel();
     this.currentCard = '';
     this.pickCardAnimation = false;
-
-    // optional: Start bei erstem Spieler
     this.game.currentPlayer = 0;
   }
 
   takeCard(): void {
-    // keine Doppel-Animation / keine Karte ziehen ohne Spieler / keine Karten mehr im Stack
     if (this.pickCardAnimation) return;
     if (this.game.players.length === 0) return;
     if (this.game.stack.length === 0) return;
@@ -66,7 +89,6 @@ export class GameComponent implements OnInit {
     this.currentCard = card;
     this.pickCardAnimation = true;
 
-    // nächster Spieler (safe)
     this.game.currentPlayer =
       (this.game.currentPlayer + 1) % this.game.players.length;
 
@@ -77,30 +99,37 @@ export class GameComponent implements OnInit {
   }
 
   openAddPlayerDialog(): void {
-    const dialogRef = this.dialog.open(DialogAddPlayerComponent);
+    if (this.isDialogOpen) return;
+
+    this.isDialogOpen = true;
+    const dialogRef = this.dialog.open(DialogAddPlayerComponent, {
+      width: 'min(520px, calc(100vw - 24px))',
+      maxWidth: '520px',
+      maxHeight: 'calc(100vh - 24px)',
+      autoFocus: false,
+      panelClass: 'game-dialog',
+      disableClose: true,
+    });
 
     dialogRef.afterClosed().subscribe((result: string | undefined) => {
+      this.isDialogOpen = false; 
+
       const name = (result ?? '').trim();
       if (!name) return;
 
-      // Avatar auswählen: möglichst einzigartig, bis alle verbraucht
       const used = new Set(this.game.players.map((p) => p.avatar));
       const available = this.avatars.filter((a) => !used.has(a));
-
       const pool = available.length ? available : this.avatars;
       const avatar = pool[Math.floor(Math.random() * pool.length)];
 
-      const newPlayer: Player = { name, avatar };
-      this.game.players.push(newPlayer);
+      this.game.players.push({ name, avatar });
 
-      // wenn erster Spieler hinzugefügt wird: currentPlayer sauber setzen
       if (this.game.players.length === 1) {
         this.game.currentPlayer = 0;
       }
     });
   }
 
-  // Optional: falls du später einen Player löschen willst
   removePlayer(index: number): void {
     if (index < 0 || index >= this.game.players.length) return;
 
@@ -111,12 +140,7 @@ export class GameComponent implements OnInit {
       return;
     }
 
-    // currentPlayer im gültigen Bereich halten
     this.game.currentPlayer =
       this.game.currentPlayer % this.game.players.length;
-  }
-
-  get isMobile(): boolean {
-    return window.innerWidth <= 700;
   }
 }

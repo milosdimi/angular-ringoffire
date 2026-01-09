@@ -1,4 +1,22 @@
-/* ===== Game Field ===== */
+:host {
+  --discard-x: 140px;
+  --discard-y: -230px;
+  --discard-rot: 10deg;
+  --discard-scale: 1.2;
+  --discard-x-m: 95px;
+  --discard-y-m: -170px;
+  --discard-rot-m: 8deg;
+  --discard-scale-m: 1.15;
+}
+
+.game-root.dialog-open {
+  .players,
+  .game-info-wrapper,
+  .add-player-button {
+    display: none;
+  }
+}
+
 .field {
   width: 100vw;
   height: 100vh;
@@ -12,7 +30,6 @@
   overflow: hidden;
 }
 
-/* ===== Cards ===== */
 .card-stack {
   position: relative;
   width: 200px;
@@ -22,33 +39,43 @@
     position: absolute;
     top: 0;
     width: 150px;
+    user-select: none;
+    -webkit-user-drag: none;
   }
 }
 
 .stack-card {
   pointer-events: none;
+  opacity: 0.95;
 }
 
 .top-card {
   cursor: pointer;
-  transition: transform 150ms ease-in-out;
   right: 25px;
   z-index: 10;
+  transition: transform 150ms ease-in-out;
 
   &:hover {
-    transform: scale(1.1) translateY(-10px);
+    transform: scale(1.08) translateY(-8px);
+  }
+
+  &:active {
+    transform: scale(1.02);
   }
 }
 
 .played-card {
   right: 25px;
-  transform: scale(1.2) translate(140px, -230px) rotate(10deg);
+  z-index: 5;
+  transform: scale(var(--discard-scale))
+    translate(var(--discard-x), var(--discard-y)) rotate(var(--discard-rot));
 }
 
+/* ===== Flying Card ===== */
 .pick-card {
   right: 25px;
   z-index: 20;
-  animation: pick-card-animation 1s ease-in-out forwards;
+  animation: pick-card-animation 900ms ease-in-out forwards;
 }
 
 @keyframes pick-card-animation {
@@ -57,78 +84,107 @@
   }
   40%,
   60% {
-    transform: scale(1.4);
+    transform: scale(1.35);
   }
   100% {
-    transform: scale(1.2) translate(140px, -230px) rotate(10deg);
+    transform: scale(var(--discard-scale))
+      translate(var(--discard-x), var(--discard-y)) rotate(var(--discard-rot));
   }
 }
 
-/* ===== Floating Buttons / UI ===== */
 .add-player-button {
   position: fixed;
-  top: calc(14px + env(safe-area-inset-top));
   right: 16px;
+  top: calc(16px + env(safe-area-inset-top));
   z-index: 1200;
 }
 
-/* ===== Game Info =====
-   (wenn du es unten möchtest, stell bottom/left ein; so stört es weniger) */
+.game-fab {
+  background: linear-gradient(145deg, #ffcc66, #e6a93d);
+  color: #2b1a00;
+
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+
+  &:hover {
+    filter: brightness(1.08);
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.65),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  }
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+}
+
 .game-info-wrapper {
   position: fixed;
   left: 16px;
   bottom: calc(16px + env(safe-area-inset-bottom));
-  z-index: 1100;
 }
 
-/* ===== Players (Desktop default) =====
-   Rechts als Liste, scrollbar */
 .players {
   position: fixed;
   right: 0px;
   top: calc(90px + env(safe-area-inset-top));
-  z-index: 1100;
-
   display: flex;
   flex-direction: column;
-  gap: 12px;
-
+  gap: 16px;
   max-height: calc(100vh - 140px);
-  overflow: auto;
-
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: visible;
+  scrollbar-width: none;
 }
 
-/* Scrollbar (optional) */
 .players::-webkit-scrollbar {
-  width: 6px;
-}
-.players::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
+  width: 0;
+  height: 0;
 }
 
-/* ===== Mobile: Kugeln links (wie deine Skizze) ===== */
 @media (max-width: 700px) {
-  .players {
-    left: 10px;
-    right: auto;
-    top: calc(90px + env(safe-area-inset-top));
-
-    /* Kugel-Liste links */
-    flex-direction: column;
-    gap: 10px;
-
-    max-height: calc(100vh - 140px);
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    padding-right: 0;
+  :host {
+    --discard-x: var(--discard-x-m);
+    --discard-y: var(--discard-y-m);
+    --discard-rot: var(--discard-rot-m);
+    --discard-scale: var(--discard-scale-m);
   }
 
-  /* Game-Info auf Mobile etwas weiter nach rechts,
-     damit es nicht direkt unter den Kugeln liegt */
+  .players {
+    left: 14px;
+    top: calc(78px + env(safe-area-inset-top));
+  }
+
+  .card-stack {
+    width: 147px;
+    height: 233px;
+    transform: translateY(40px) scale(0.92);
+    transform-origin: center;
+
+    img {
+      width: 140px;
+    }
+  }
+
   .game-info-wrapper {
     left: 72px;
     right: 12px;
+  }
+}
+
+@media (max-height: 520px) {
+  .players {
+    top: calc(56px + env(safe-area-inset-top));
+    max-height: calc(100vh - 90px);
   }
 }
