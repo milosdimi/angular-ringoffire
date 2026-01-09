@@ -1,19 +1,29 @@
-<mat-card class="game-info-card">
-    <mat-card-title>Game Rules</mat-card-title>
+<mat-card class="game-info-card" appearance="outlined">
+    <div class="header">
+        <div class="title">Game Rules</div>
 
-    <mat-card-content>
+        <!-- Optional: später close -->
+        <!-- <button mat-icon-button aria-label="Close"><mat-icon>close</mat-icon></button> -->
+    </div>
+
+    <mat-card-content class="content">
         <!-- Wenn noch keine Karte gezogen wurde -->
-        <p *ngIf="!card">Draw a card to see the rule.</p>
+        <p class="muted" *ngIf="!card">Draw a card to see the rule.</p>
 
-        <!-- Wenn die Karte keine Regel findet (Fallback) -->
-        <p *ngIf="card && !currentAction">
+        <!-- Wenn keine Regel gefunden -->
+        <p class="muted" *ngIf="card && !currentAction">
             No rule found for: <strong>{{ card }}</strong>
         </p>
 
         <!-- Regel zur aktuellen Karte -->
         <ng-container *ngIf="currentAction">
-            <h3>{{ currentAction.card }} – {{ currentAction.title }}</h3>
-            <p>{{ currentAction.description }}</p>
+            <div class="rule">
+                <div class="rule-title">
+                    <span class="chip">{{ currentAction.card }}</span>
+                    <span class="rule-name">{{ currentAction.title }}</span>
+                </div>
+                <p class="rule-desc">{{ currentAction.description }}</p>
+            </div>
         </ng-container>
     </mat-card-content>
 </mat-card>

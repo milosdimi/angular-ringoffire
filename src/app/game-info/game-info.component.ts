@@ -18,7 +18,7 @@ interface CardAction {
 export class GameInfoComponent {
   @Input() card: string = '';
 
-  cardAction: CardAction[] = [
+   readonly cardAction: CardAction[] = [
     {
       card: 'Ace',
       title: 'Waterfall',
