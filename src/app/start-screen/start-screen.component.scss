@@ -1,31 +1,159 @@
-.start-screen {
-    background-color: #404040;
-    width: 100vw;
-    height: 100vh;
-    max-width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    img {
-        height: 100vh;
-    }
+/* =========================
+   Start Screen (Responsive)
+   ========================= */
 
+.start-screen {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100%;
+  overflow: hidden;
+  background: #0f0f0f;
 }
 
-.start-label-box {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 100px;
-    display: flex;
-    justify-content: center;
-    img {
-        width: 40vw;
-        height: auto;
+/* Background image */
+.bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 
-        &:hover {
-            filter: brightness(1.25);
-            cursor: pointer;
-        }
-    }
+  object-position: center;
+
+  transform: scale(1.02);
+  filter: saturate(1.05) contrast(1.05);
+}
+
+/* Dark overlay for readability + safe area */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: end center;
+
+  padding: clamp(12px, 3vw, 28px);
+  padding-bottom: calc(clamp(12px, 3vw, 28px) + env(safe-area-inset-bottom));
+
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.12));
+}
+
+/* Glass card */
+.start-card {
+  width: min(560px, 92vw);
+  max-height: min(70vh, 520px);
+  overflow: hidden;
+
+  border-radius: clamp(16px, 2.5vw, 22px);
+
+  background: rgba(15, 15, 15, 0.55);
+  color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  /* tiny entrance feel */
+  animation: start-card-in 320ms ease-out;
+}
+
+@keyframes start-card-in {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.start-card-content {
+  padding: clamp(14px, 3vw, 24px);
+  text-align: center;
+}
+
+/* Title + text */
+.title {
+  margin: 6px 0 6px;
+  font-size: clamp(26px, 5.2vw, 44px);
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  text-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+.subtitle {
+  margin: 0 0 10px;
+  opacity: 0.9;
+  font-size: clamp(14px, 2.6vw, 16px);
+}
+
+.hint {
+  margin: 10px 0 clamp(12px, 3vw, 18px);
+  opacity: 0.75;
+  font-size: clamp(12px, 2.4vw, 14px);
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Gold label button */
+.start-label {
+  width: min(340px, 78vw);
+  max-width: 100%;
+  height: auto;
+
+  cursor: pointer;
+  transition: transform 160ms ease, filter 160ms ease;
+
+  filter: drop-shadow(0 8px 20px rgba(255, 200, 80, 0.45));
+
+  &:hover {
+    transform: translateY(-4px) scale(1.03);
+    filter: drop-shadow(0 12px 28px rgba(255, 210, 120, 0.75));
+  }
+
+  &:active {
+    transform: translateY(-1px) scale(0.98);
+    filter: drop-shadow(0 6px 16px rgba(255, 190, 90, 0.65));
+  }
+}
+
+/* Small phones */
+@media (max-width: 420px) {
+  .start-card {
+    max-height: 62vh;
+  }
+
+  .hint {
+    display: none;
+  }
+}
+
+/* Very short height devices (landscape phones) */
+@media (max-height: 520px) {
+  .overlay {
+    place-items: center;
+  }
+
+  .start-card {
+    max-height: 86vh;
+  }
+}
+
+@media (max-aspect-ratio: 3 / 4) {
+  .bg {
+    object-fit: contain; // ✅ nichts abschneiden
+    object-position: center;
+    transform: none; // kein Zoom bei contain
+  }
+}
+
+@media (min-aspect-ratio: 16 / 9) {
+  .bg {
+    object-position: center top;
+  }
 }

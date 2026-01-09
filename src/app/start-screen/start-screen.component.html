@@ -1,8 +1,21 @@
 <section class="start-screen">
-    <img src="assets/img/startbox.png" alt="start-box">
+    <!-- Background -->
+    <img class="bg" src="assets/img/startbox.png" alt="Start screen background" />
 
+    <!-- Overlay -->
+    <div class="overlay">
+        <mat-card class="start-card">
+            <div class="start-card-content">
+                <h1 class="title">Ring of Fire</h1>
+                <p class="subtitle">Klicke auf Start und los geht’s 🎴</p>
 
-    <div class="start-label-box">
-        <img (click)="newGame()" src="assets/img/label2.png" alt="label gold">
+                <p class="hint">Tipp: Handy quer = bestes Spielerlebnis.</p>
+
+                <div class="actions">
+                    <img class="start-label" (click)="newGame()" src="assets/img/label2.png" alt="Start" />
+                </div>
+            </div>
+        </mat-card>
+
     </div>
 </section>
