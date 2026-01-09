@@ -1,28 +1,52 @@
 .player {
   display: flex;
   align-items: center;
-  background-color: rgba(50, 50, 50, 0.8);
-  width: 300px;
-  border-top-left-radius: 50px;
-  border-bottom-left-radius: 50px;
+  gap: 14px;
+
+  padding: 10px 14px 10px 10px;
+  width: min(340px, 92vw);
+
+  background: rgba(20, 20, 20, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+
+  transition: transform 160ms ease, box-shadow 160ms ease,
+    border-color 160ms ease;
 
   img {
-    width: 70px;
-    height: 70px;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
     object-fit: cover;
-    border-radius: 100%;
+
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   }
 
-  span {
-    font-weight: bold;
-    margin-left: 14px;
-    gap: 10px;
-    font-size: 1.2rem;
+  .name {
+    font-weight: 800;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
   }
 }
 
 .player-active {
-  background-color: orange !important;
-  box-shadow: 0 0 10px 5px red;
-}
+  border-color: rgba(255, 195, 70, 0.6);
+  background: rgba(255, 165, 0, 0.18);
 
+  transform: translateX(-6px);
+  box-shadow: 0 14px 40px rgba(255, 165, 0, 0.25);
+
+  img {
+    border-color: rgba(255, 195, 70, 0.75);
+  }
+
+  .name {
+    color: #ffcc66;
+  }
+}

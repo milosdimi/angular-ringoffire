@@ -1,5 +1,10 @@
+export interface Player {
+  name: string;
+  avatar: string;
+}
+
 export class GameModel {
-  public players: string[] = [];
+  public players: Player[] = [];      
   public stack: string[] = [];
   public playedCard: string[] = [];
   public currentPlayer: number = 0;
@@ -22,7 +27,7 @@ export class GameModel {
     let currentIndex = array.length;
 
     while (currentIndex !== 0) {
-      let randomIndex = Math.floor(Math.random() * currentIndex);
+      const randomIndex = Math.floor(Math.random() * currentIndex);
       currentIndex--;
 
       [array[currentIndex], array[randomIndex]] = [

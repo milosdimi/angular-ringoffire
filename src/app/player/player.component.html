@@ -1,4 +1,4 @@
 <div class="player" [class.player-active]="playerActive">
-    <img src="assets/img/profile/death.png" alt="player death">
-    <span>{{ name }}</span>
+    <img [src]="avatarSrc" [alt]="'player ' + name" />
+    <span class="name">{{ name }}</span>
 </div>

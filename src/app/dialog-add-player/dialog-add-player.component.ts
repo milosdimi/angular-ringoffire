@@ -33,3 +33,5 @@ export class DialogAddPlayerComponent {
     this.dialogRef.close();
   }
 }
+
+
