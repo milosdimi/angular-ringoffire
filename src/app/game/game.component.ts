@@ -33,8 +33,7 @@ import { DialogAddPlayerComponent } from '../dialog-add-player/dialog-add-player
   styleUrls: ['./game.component.scss'],
 })
 export class GameComponent implements OnInit, OnDestroy {
-  pickCardAnimation = false;
-  currentCard = '';
+
   game: GameModel = new GameModel();
 
   // UI
@@ -116,7 +115,7 @@ export class GameComponent implements OnInit, OnDestroy {
       this.game.playedCard = Array.isArray(g.playedCard) ? g.playedCard : [];
       this.game.currentPlayer =
         typeof g.currentPlayer === 'number' ? g.currentPlayer : 0;
-      this.currentCard = typeof g.currentCard === 'string' ? g.currentCard : '';
+      this.game.currentCard = typeof g.currentCard === 'string' ? g.currentCard : '';
 
       // ✅ Wichtig: Wenn Stack leer ist, Deck initialisieren (damit Karten ziehen geht)
       if (this.game.stack.length === 0) {
@@ -124,14 +123,14 @@ export class GameComponent implements OnInit, OnDestroy {
         this.game.stack = fresh.stack;
         this.game.playedCard = [];
         this.game.currentPlayer = 0;
-        this.currentCard = '';
+        this.game.currentCard = '';
         this.saveGameToFirestore().catch(console.error);
       }
     });
   }
 
   private async saveGameToFirestore(): Promise<void> {
-    if (!this.gameId) return; // ✅ ohne ID nicht speichern
+    if (!this.gameId) return; // ohne ID nicht speichern
     const ref = doc(this.firestore, `games/${this.gameId}`);
 
     const payload = {
@@ -140,7 +139,7 @@ export class GameComponent implements OnInit, OnDestroy {
         stack: this.game.stack,
         playedCard: this.game.playedCard,
         currentPlayer: this.game.currentPlayer,
-        currentCard: this.currentCard,
+        currentCard: this.game.currentCard,
       },
       updatedAt: Date.now(),
     };
@@ -153,8 +152,8 @@ export class GameComponent implements OnInit, OnDestroy {
      ===================== */
   newGame(): void {
     this.game = new GameModel();
-    this.currentCard = '';
-    this.pickCardAnimation = false;
+    this.game.currentCard = '';
+    this.game.pickCardAnimation = false;
     this.game.currentPlayer = 0;
 
     // Optional: direkt initial in Firestore speichern
@@ -163,23 +162,23 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   takeCard(): void {
-    if (this.pickCardAnimation) return;
+    if (this.game.pickCardAnimation) return;
     if (this.game.players.length === 0) return;
     if (this.game.stack.length === 0) return;
 
     const card = this.game.stack.pop();
     if (!card) return;
 
-    this.currentCard = card;
-    this.pickCardAnimation = true;
+    this.game.currentCard = card;
+    this.game.pickCardAnimation = true;
 
     // nächster Spieler
     this.game.currentPlayer =
       (this.game.currentPlayer + 1) % this.game.players.length;
 
     setTimeout(async () => {
-      this.game.playedCard.push(this.currentCard);
-      this.pickCardAnimation = false;
+      this.game.playedCard.push(this.game.currentCard);
+      this.game.pickCardAnimation = false;
 
       // ✅ nach Aktion speichern
       try {
@@ -226,7 +225,7 @@ export class GameComponent implements OnInit, OnDestroy {
         this.game.currentPlayer = 0;
       }
 
-      // ✅ nach Änderung speichern
+      // nach Änderung speichern
       try {
         await this.saveGameToFirestore();
       } catch (e) {

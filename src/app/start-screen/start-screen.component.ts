@@ -16,12 +16,12 @@ export class StartScreenComponent {
   private firestore = inject(Firestore);
 
   async newGame() {
-    const game = new GameModel(); // ✅ Deck + Shuffle
+    const game = new GameModel(); // Deck + Shuffle
 
     const docRef = await addDoc(collection(this.firestore, 'games'), {
       game: {
         players: game.players,
-        stack: game.stack,           // ✅ NICHT leer
+        stack: game.stack,          
         playedCard: game.playedCard,
         currentPlayer: game.currentPlayer,
         currentCard: '',

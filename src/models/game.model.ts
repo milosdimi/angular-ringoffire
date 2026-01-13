@@ -3,10 +3,12 @@ export interface Player {
   avatar: string;
 }
 export class GameModel {
-  public players: Player[] = [];      
+  public players: Player[] = [];
   public stack: string[] = [];
   public playedCard: string[] = [];
   public currentPlayer: number = 0;
+  public pickCardAnimation = false;
+  public currentCard = '';
 
   constructor() {
     this.generateDeck();

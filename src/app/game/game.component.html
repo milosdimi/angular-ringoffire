@@ -42,9 +42,9 @@
 
       <!-- Animierte Karte -->
       <img
-        *ngIf="pickCardAnimation"
+        *ngIf="game.pickCardAnimation"
         class="pick-card"
-        [src]="'assets/img/cards/' + currentCard + '.png'"
+        [src]="'assets/img/cards/' + game.currentCard + '.png'"
         alt="Picked Card"
       />
     </div>
@@ -52,7 +52,7 @@
 
   <!-- GAME INFO -->
   <div class="game-info-wrapper">
-    <app-game-info [card]="currentCard"></app-game-info>
+    <app-game-info [card]="game.currentCard"></app-game-info>
   </div>
 
   <!-- ADD PLAYER BUTTON -->
