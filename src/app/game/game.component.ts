@@ -4,12 +4,22 @@ import {
   Inject,
   PLATFORM_ID,
   HostListener,
+  OnDestroy,
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+
+import {
+  Firestore,
+  doc,
+  docData,
+  setDoc,
+} from '@angular/fire/firestore';
+
+import { Subscription } from 'rxjs';
 
 import { GameModel, Player } from '../../models/game.model';
 import { PlayerComponent } from '../player/player.component';
@@ -30,17 +40,23 @@ import { DialogAddPlayerComponent } from '../dialog-add-player/dialog-add-player
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
 })
-export class GameComponent implements OnInit {
+export class GameComponent implements OnInit, OnDestroy {
   pickCardAnimation = false;
   currentCard = '';
   game: GameModel = new GameModel();
 
+  // UI
   isMobile = false;
   isDialogOpen = false;
 
   private readonly mobileWidth = 700;
   private readonly isBrowser: boolean;
 
+  // Firestore
+  private readonly gameId = 'testgame'; // später dynamisch (z.B. per Route)
+  private gameSub?: Subscription;
+
+  // Avatar Pool (assets/img/profile/)
   private readonly avatars: string[] = [
     'cow.png',
     'death.png',
@@ -52,10 +68,12 @@ export class GameComponent implements OnInit {
 
   constructor(
     private dialog: MatDialog,
+    private firestore: Firestore,
     @Inject(PLATFORM_ID) platformId: object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
 
+    // ✅ window nur im Browser anfassen
     if (this.isBrowser) {
       this.isMobile = window.innerWidth <= this.mobileWidth;
     }
@@ -63,19 +81,76 @@ export class GameComponent implements OnInit {
 
   ngOnInit(): void {
     this.newGame();
+    this.listenToGameFromFirestore();
   }
 
+  ngOnDestroy(): void {
+    this.gameSub?.unsubscribe();
+  }
+
+  /* =====================
+     Responsive (SSR-safe)
+     ===================== */
   @HostListener('window:resize')
   onResize(): void {
     if (!this.isBrowser) return;
     this.isMobile = window.innerWidth <= this.mobileWidth;
   }
 
+  /* =====================
+     Firestore: Listen + Save
+     ===================== */
+  private listenToGameFromFirestore(): void {
+    // ein Dokument pro Spiel: games/<gameId>
+    const ref = doc(this.firestore, `games/${this.gameId}`);
+
+    this.gameSub = docData(ref).subscribe((data: any) => {
+      // Erwartetes Format:
+      // { game: { players, stack, playedCard, currentPlayer, currentCard }, updatedAt }
+      const g = data?.game;
+      if (!g) return;
+
+      // State übernehmen (nur wenn vorhanden)
+      this.game.players = Array.isArray(g.players) ? g.players : [];
+      this.game.stack = Array.isArray(g.stack) ? g.stack : this.game.stack;
+      this.game.playedCard = Array.isArray(g.playedCard) ? g.playedCard : [];
+      this.game.currentPlayer =
+        typeof g.currentPlayer === 'number' ? g.currentPlayer : 0;
+
+      this.currentCard = typeof g.currentCard === 'string' ? g.currentCard : '';
+      // pickCardAnimation NICHT aus DB übernehmen (UI-only)
+    });
+  }
+
+  private async saveGameToFirestore(): Promise<void> {
+    const ref = doc(this.firestore, `games/${this.gameId}`);
+
+    const payload = {
+      game: {
+        players: this.game.players,
+        stack: this.game.stack,
+        playedCard: this.game.playedCard,
+        currentPlayer: this.game.currentPlayer,
+        currentCard: this.currentCard,
+      },
+      updatedAt: Date.now(),
+    };
+
+    await setDoc(ref, payload, { merge: true });
+  }
+
+  /* =====================
+     Game Logic
+     ===================== */
   newGame(): void {
     this.game = new GameModel();
     this.currentCard = '';
     this.pickCardAnimation = false;
     this.game.currentPlayer = 0;
+
+    // Optional: direkt initial in Firestore speichern
+    // (wenn du das NICHT willst, kommentiere die Zeile aus)
+    this.saveGameToFirestore().catch(console.error);
   }
 
   takeCard(): void {
@@ -89,19 +164,31 @@ export class GameComponent implements OnInit {
     this.currentCard = card;
     this.pickCardAnimation = true;
 
+    // nächster Spieler
     this.game.currentPlayer =
       (this.game.currentPlayer + 1) % this.game.players.length;
 
-    setTimeout(() => {
+    setTimeout(async () => {
       this.game.playedCard.push(this.currentCard);
       this.pickCardAnimation = false;
-    }, 1000);
+
+      // ✅ nach Aktion speichern
+      try {
+        await this.saveGameToFirestore();
+      } catch (e) {
+        console.error('saveGameToFirestore failed', e);
+      }
+    }, 900);
   }
 
+  /* =====================
+     Player Handling
+     ===================== */
   openAddPlayerDialog(): void {
     if (this.isDialogOpen) return;
 
     this.isDialogOpen = true;
+
     const dialogRef = this.dialog.open(DialogAddPlayerComponent, {
       width: 'min(520px, calc(100vw - 24px))',
       maxWidth: '520px',
@@ -111,36 +198,49 @@ export class GameComponent implements OnInit {
       disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe((result: string | undefined) => {
-      this.isDialogOpen = false; 
+    dialogRef.afterClosed().subscribe(async (result: string | undefined) => {
+      this.isDialogOpen = false;
 
       const name = (result ?? '').trim();
       if (!name) return;
 
+      // Avatar möglichst einzigartig
       const used = new Set(this.game.players.map((p) => p.avatar));
       const available = this.avatars.filter((a) => !used.has(a));
       const pool = available.length ? available : this.avatars;
       const avatar = pool[Math.floor(Math.random() * pool.length)];
 
-      this.game.players.push({ name, avatar });
+      const newPlayer: Player = { name, avatar };
+      this.game.players.push(newPlayer);
 
       if (this.game.players.length === 1) {
         this.game.currentPlayer = 0;
       }
+
+      // ✅ nach Änderung speichern
+      try {
+        await this.saveGameToFirestore();
+      } catch (e) {
+        console.error('saveGameToFirestore failed', e);
+      }
     });
   }
 
-  removePlayer(index: number): void {
+  async removePlayer(index: number): Promise<void> {
     if (index < 0 || index >= this.game.players.length) return;
 
     this.game.players.splice(index, 1);
 
     if (this.game.players.length === 0) {
       this.game.currentPlayer = 0;
-      return;
+    } else {
+      this.game.currentPlayer = this.game.currentPlayer % this.game.players.length;
     }
 
-    this.game.currentPlayer =
-      this.game.currentPlayer % this.game.players.length;
+    try {
+      await this.saveGameToFirestore();
+    } catch (e) {
+      console.error('saveGameToFirestore failed', e);
+    }
   }
 }
