@@ -36,26 +36,21 @@ import { DialogAddPlayerComponent } from '../dialog-add-player/dialog-add-player
   styleUrls: ['./game.component.scss'],
 })
 export class GameComponent implements OnInit, OnDestroy {
-  // ✅ UI-only animation (local), NOT stored in Firestore
   pickCardAnimation = false;
-
   game: GameModel = new GameModel();
 
-  // UI
   isMobile = false;
   isDialogOpen = false;
 
   private readonly mobileWidth = 700;
   private readonly isBrowser: boolean;
+  private readonly PICK_MS = 900;
 
-  // Firestore
   private gameId = '';
   private gameSub?: Subscription;
 
-  // ✅ used to detect a new "move event" from Firestore
   private lastSeenMoveId = 0;
 
-  // Avatar Pool (assets/img/profile/)
   private readonly avatars: string[] = [
     'cow.png',
     'death.png',
@@ -79,17 +74,20 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Route-ID lesen
     this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       if (!id) return;
 
       this.gameId = id;
-
-      // alte subscription schließen (falls Route wechselt)
       this.gameSub?.unsubscribe();
 
-      // jetzt live aus Firestore laden
+      if (this.isBrowser) {
+        document.documentElement.style.setProperty(
+          '--pick-ms',
+          `${this.PICK_MS}ms`
+        );
+      }
+
       this.listenToGameFromFirestore();
     });
   }
@@ -123,16 +121,13 @@ export class GameComponent implements OnInit, OnDestroy {
       this.game.currentPlayer =
         typeof g.currentPlayer === 'number' ? g.currentPlayer : 0;
 
-      // ✅ currentCard lives in the game state (and is saved)
       this.game.currentCard =
         typeof g.currentCard === 'string' ? g.currentCard : '';
 
-      // ✅ move event fields (saved)
       this.game.moveId = typeof g.moveId === 'number' ? g.moveId : 0;
       this.game.lastMoveAt =
         typeof g.lastMoveAt === 'number' ? g.lastMoveAt : 0;
 
-      // ✅ If stack is empty, initialize a fresh deck (for old docs)
       if (this.game.stack.length === 0) {
         const fresh = new GameModel();
         this.game.stack = fresh.stack;
@@ -145,7 +140,6 @@ export class GameComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // ✅ Start animation on ALL clients when a NEW move arrives
       if (this.game.moveId && this.game.moveId !== this.lastSeenMoveId) {
         this.lastSeenMoveId = this.game.moveId;
         this.playPickAnimation(this.game.lastMoveAt);
@@ -164,10 +158,8 @@ export class GameComponent implements OnInit, OnDestroy {
         playedCard: this.game.playedCard,
         currentPlayer: this.game.currentPlayer,
 
-        // ✅ shared state
         currentCard: this.game.currentCard,
 
-        // ✅ move event for synced animations
         moveId: this.game.moveId ?? 0,
         lastMoveAt: this.game.lastMoveAt ?? 0,
       },
@@ -181,14 +173,15 @@ export class GameComponent implements OnInit, OnDestroy {
      Animation (local UI only)
      ===================== */
   private playPickAnimation(lastMoveAt: number): void {
-    // Optional: tiny latency compensation
     const lag = Date.now() - (lastMoveAt || Date.now());
-    const delay = Math.max(0, 80 - lag); // 0..80ms
+    const delay = Math.max(0, 80 - lag);
 
-    this.pickCardAnimation = false; // reset (so animation can re-trigger)
+    this.pickCardAnimation = false;
+
     setTimeout(() => {
       this.pickCardAnimation = true;
-      setTimeout(() => (this.pickCardAnimation = false), 900);
+
+      setTimeout(() => (this.pickCardAnimation = false), this.PICK_MS);
     }, delay);
   }
 
@@ -203,33 +196,24 @@ export class GameComponent implements OnInit, OnDestroy {
     const card = this.game.stack.pop();
     if (!card) return;
 
-    // next player
     this.game.currentPlayer =
       (this.game.currentPlayer + 1) % this.game.players.length;
 
-    // shared move event
     this.game.currentCard = card;
     this.game.moveId = (this.game.moveId ?? 0) + 1;
     this.game.lastMoveAt = Date.now();
 
-    // ✅ WICHTIG: noch NICHT in playedCard pushen
-    // erst animieren, dann pushen
-
-    // sofort speichern -> andere Clients starten Animation
     this.saveGameToFirestore().catch(console.error);
 
-    // lokal animieren sofort
     this.playPickAnimation(this.game.lastMoveAt);
 
-    // ✅ nach Animation: Karte in Discard legen + speichern
     setTimeout(() => {
-      // falls in der Zwischenzeit schon gelegt wurde, nicht doppelt
       const last = this.game.playedCard[this.game.playedCard.length - 1];
       if (last !== this.game.currentCard) {
         this.game.playedCard.push(this.game.currentCard);
         this.saveGameToFirestore().catch(console.error);
       }
-    }, 900);
+    }, this.PICK_MS);
   }
 
   /* =====================
@@ -255,7 +239,6 @@ export class GameComponent implements OnInit, OnDestroy {
       const name = (result ?? '').trim();
       if (!name) return;
 
-      // Avatar möglichst einzigartig
       const used = new Set(this.game.players.map((p) => p.avatar));
       const available = this.avatars.filter((a) => !used.has(a));
       const pool = available.length ? available : this.avatars;

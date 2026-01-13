@@ -16,7 +16,7 @@ export class StartScreenComponent {
   private firestore = inject(Firestore);
 
   async newGame() {
-    const game = new GameModel(); // Deck + Shuffle
+    const game = new GameModel(); 
 
     const docRef = await addDoc(collection(this.firestore, 'games'), {
       game: {
