@@ -1,25 +1,35 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { Firestore, collection, addDoc } from '@angular/fire/firestore';
 import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { GameModel } from '../../models/game.model';
 
 @Component({
   selector: 'app-start-screen',
   standalone: true,
-  imports: [MatCardModule, MatButtonModule, MatIconModule],
+  imports: [MatCardModule],
   templateUrl: './start-screen.component.html',
   styleUrl: './start-screen.component.scss',
 })
 export class StartScreenComponent {
-  constructor(private router: Router) {}
+  private router = inject(Router);
+  private firestore = inject(Firestore);
 
-  isStarting = false;
+  async newGame() {
+    const game = new GameModel(); // ✅ Deck + Shuffle
 
-  newGame() {
-    if (this.isStarting) return;
-    this.isStarting = true;
+    const docRef = await addDoc(collection(this.firestore, 'games'), {
+      game: {
+        players: game.players,
+        stack: game.stack,           // ✅ NICHT leer
+        playedCard: game.playedCard,
+        currentPlayer: game.currentPlayer,
+        currentCard: '',
+      },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
 
-    this.router.navigateByUrl('/game');
+    this.router.navigateByUrl(`/game/${docRef.id}`);
   }
 }

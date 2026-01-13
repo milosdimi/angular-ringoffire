@@ -7,20 +7,12 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-
-import {
-  Firestore,
-  doc,
-  docData,
-  setDoc,
-} from '@angular/fire/firestore';
-
+import { Firestore, doc, docData, setDoc } from '@angular/fire/firestore';
+import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
-
 import { GameModel, Player } from '../../models/game.model';
 import { PlayerComponent } from '../player/player.component';
 import { GameInfoComponent } from '../game-info/game-info.component';
@@ -53,7 +45,7 @@ export class GameComponent implements OnInit, OnDestroy {
   private readonly isBrowser: boolean;
 
   // Firestore
-  private readonly gameId = 'testgame'; // später dynamisch (z.B. per Route)
+  private gameId = '';
   private gameSub?: Subscription;
 
   // Avatar Pool (assets/img/profile/)
@@ -67,6 +59,7 @@ export class GameComponent implements OnInit, OnDestroy {
   ];
 
   constructor(
+    private route: ActivatedRoute,
     private dialog: MatDialog,
     private firestore: Firestore,
     @Inject(PLATFORM_ID) platformId: object
@@ -80,8 +73,19 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.newGame();
-    this.listenToGameFromFirestore();
+    // Route-ID lesen
+    this.route.paramMap.subscribe((params) => {
+      const id = params.get('id');
+      if (!id) return;
+
+      this.gameId = id;
+
+      // alte subscription schließen (falls Route wechselt)
+      this.gameSub?.unsubscribe();
+
+      // jetzt live aus Firestore laden
+      this.listenToGameFromFirestore();
+    });
   }
 
   ngOnDestroy(): void {
@@ -101,28 +105,33 @@ export class GameComponent implements OnInit, OnDestroy {
      Firestore: Listen + Save
      ===================== */
   private listenToGameFromFirestore(): void {
-    // ein Dokument pro Spiel: games/<gameId>
     const ref = doc(this.firestore, `games/${this.gameId}`);
 
     this.gameSub = docData(ref).subscribe((data: any) => {
-      // Erwartetes Format:
-      // { game: { players, stack, playedCard, currentPlayer, currentCard }, updatedAt }
       const g = data?.game;
       if (!g) return;
 
-      // State übernehmen (nur wenn vorhanden)
       this.game.players = Array.isArray(g.players) ? g.players : [];
-      this.game.stack = Array.isArray(g.stack) ? g.stack : this.game.stack;
+      this.game.stack = Array.isArray(g.stack) ? g.stack : [];
       this.game.playedCard = Array.isArray(g.playedCard) ? g.playedCard : [];
       this.game.currentPlayer =
         typeof g.currentPlayer === 'number' ? g.currentPlayer : 0;
-
       this.currentCard = typeof g.currentCard === 'string' ? g.currentCard : '';
-      // pickCardAnimation NICHT aus DB übernehmen (UI-only)
+
+      // ✅ Wichtig: Wenn Stack leer ist, Deck initialisieren (damit Karten ziehen geht)
+      if (this.game.stack.length === 0) {
+        const fresh = new GameModel();
+        this.game.stack = fresh.stack;
+        this.game.playedCard = [];
+        this.game.currentPlayer = 0;
+        this.currentCard = '';
+        this.saveGameToFirestore().catch(console.error);
+      }
     });
   }
 
   private async saveGameToFirestore(): Promise<void> {
+    if (!this.gameId) return; // ✅ ohne ID nicht speichern
     const ref = doc(this.firestore, `games/${this.gameId}`);
 
     const payload = {
@@ -234,7 +243,8 @@ export class GameComponent implements OnInit, OnDestroy {
     if (this.game.players.length === 0) {
       this.game.currentPlayer = 0;
     } else {
-      this.game.currentPlayer = this.game.currentPlayer % this.game.players.length;
+      this.game.currentPlayer =
+        this.game.currentPlayer % this.game.players.length;
     }
 
     try {
