@@ -7,8 +7,9 @@ export class GameModel {
   public stack: string[] = [];
   public playedCard: string[] = [];
   public currentPlayer: number = 0;
-  public pickCardAnimation = false;
-  public currentCard = '';
+  public currentCard: string = '';
+  public lastMoveAt: number = 0; 
+  public moveId: number = 0; 
 
   constructor() {
     this.generateDeck();

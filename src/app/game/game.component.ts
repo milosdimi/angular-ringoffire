@@ -7,12 +7,15 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+
 import { Firestore, doc, docData, setDoc } from '@angular/fire/firestore';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
+
 import { GameModel, Player } from '../../models/game.model';
 import { PlayerComponent } from '../player/player.component';
 import { GameInfoComponent } from '../game-info/game-info.component';
@@ -33,6 +36,8 @@ import { DialogAddPlayerComponent } from '../dialog-add-player/dialog-add-player
   styleUrls: ['./game.component.scss'],
 })
 export class GameComponent implements OnInit, OnDestroy {
+  // ✅ UI-only animation (local), NOT stored in Firestore
+  pickCardAnimation = false;
 
   game: GameModel = new GameModel();
 
@@ -46,6 +51,9 @@ export class GameComponent implements OnInit, OnDestroy {
   // Firestore
   private gameId = '';
   private gameSub?: Subscription;
+
+  // ✅ used to detect a new "move event" from Firestore
+  private lastSeenMoveId = 0;
 
   // Avatar Pool (assets/img/profile/)
   private readonly avatars: string[] = [
@@ -65,7 +73,6 @@ export class GameComponent implements OnInit, OnDestroy {
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
 
-    // ✅ window nur im Browser anfassen
     if (this.isBrowser) {
       this.isMobile = window.innerWidth <= this.mobileWidth;
     }
@@ -115,22 +122,39 @@ export class GameComponent implements OnInit, OnDestroy {
       this.game.playedCard = Array.isArray(g.playedCard) ? g.playedCard : [];
       this.game.currentPlayer =
         typeof g.currentPlayer === 'number' ? g.currentPlayer : 0;
-      this.game.currentCard = typeof g.currentCard === 'string' ? g.currentCard : '';
 
-      // ✅ Wichtig: Wenn Stack leer ist, Deck initialisieren (damit Karten ziehen geht)
+      // ✅ currentCard lives in the game state (and is saved)
+      this.game.currentCard =
+        typeof g.currentCard === 'string' ? g.currentCard : '';
+
+      // ✅ move event fields (saved)
+      this.game.moveId = typeof g.moveId === 'number' ? g.moveId : 0;
+      this.game.lastMoveAt =
+        typeof g.lastMoveAt === 'number' ? g.lastMoveAt : 0;
+
+      // ✅ If stack is empty, initialize a fresh deck (for old docs)
       if (this.game.stack.length === 0) {
         const fresh = new GameModel();
         this.game.stack = fresh.stack;
         this.game.playedCard = [];
         this.game.currentPlayer = 0;
         this.game.currentCard = '';
+        this.game.moveId = 0;
+        this.game.lastMoveAt = 0;
         this.saveGameToFirestore().catch(console.error);
+        return;
+      }
+
+      // ✅ Start animation on ALL clients when a NEW move arrives
+      if (this.game.moveId && this.game.moveId !== this.lastSeenMoveId) {
+        this.lastSeenMoveId = this.game.moveId;
+        this.playPickAnimation(this.game.lastMoveAt);
       }
     });
   }
 
   private async saveGameToFirestore(): Promise<void> {
-    if (!this.gameId) return; // ohne ID nicht speichern
+    if (!this.gameId) return;
     const ref = doc(this.firestore, `games/${this.gameId}`);
 
     const payload = {
@@ -139,7 +163,13 @@ export class GameComponent implements OnInit, OnDestroy {
         stack: this.game.stack,
         playedCard: this.game.playedCard,
         currentPlayer: this.game.currentPlayer,
+
+        // ✅ shared state
         currentCard: this.game.currentCard,
+
+        // ✅ move event for synced animations
+        moveId: this.game.moveId ?? 0,
+        lastMoveAt: this.game.lastMoveAt ?? 0,
       },
       updatedAt: Date.now(),
     };
@@ -148,43 +178,56 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   /* =====================
-     Game Logic
+     Animation (local UI only)
      ===================== */
-  newGame(): void {
-    this.game = new GameModel();
-    this.game.currentCard = '';
-    this.game.pickCardAnimation = false;
-    this.game.currentPlayer = 0;
+  private playPickAnimation(lastMoveAt: number): void {
+    // Optional: tiny latency compensation
+    const lag = Date.now() - (lastMoveAt || Date.now());
+    const delay = Math.max(0, 80 - lag); // 0..80ms
 
-    // Optional: direkt initial in Firestore speichern
-    // (wenn du das NICHT willst, kommentiere die Zeile aus)
-    this.saveGameToFirestore().catch(console.error);
+    this.pickCardAnimation = false; // reset (so animation can re-trigger)
+    setTimeout(() => {
+      this.pickCardAnimation = true;
+      setTimeout(() => (this.pickCardAnimation = false), 900);
+    }, delay);
   }
 
+  /* =====================
+     Game Logic
+     ===================== */
   takeCard(): void {
-    if (this.game.pickCardAnimation) return;
+    if (this.pickCardAnimation) return;
     if (this.game.players.length === 0) return;
     if (this.game.stack.length === 0) return;
 
     const card = this.game.stack.pop();
     if (!card) return;
 
-    this.game.currentCard = card;
-    this.game.pickCardAnimation = true;
-
-    // nächster Spieler
+    // next player
     this.game.currentPlayer =
       (this.game.currentPlayer + 1) % this.game.players.length;
 
-    setTimeout(async () => {
-      this.game.playedCard.push(this.game.currentCard);
-      this.game.pickCardAnimation = false;
+    // shared move event
+    this.game.currentCard = card;
+    this.game.moveId = (this.game.moveId ?? 0) + 1;
+    this.game.lastMoveAt = Date.now();
 
-      // ✅ nach Aktion speichern
-      try {
-        await this.saveGameToFirestore();
-      } catch (e) {
-        console.error('saveGameToFirestore failed', e);
+    // ✅ WICHTIG: noch NICHT in playedCard pushen
+    // erst animieren, dann pushen
+
+    // sofort speichern -> andere Clients starten Animation
+    this.saveGameToFirestore().catch(console.error);
+
+    // lokal animieren sofort
+    this.playPickAnimation(this.game.lastMoveAt);
+
+    // ✅ nach Animation: Karte in Discard legen + speichern
+    setTimeout(() => {
+      // falls in der Zwischenzeit schon gelegt wurde, nicht doppelt
+      const last = this.game.playedCard[this.game.playedCard.length - 1];
+      if (last !== this.game.currentCard) {
+        this.game.playedCard.push(this.game.currentCard);
+        this.saveGameToFirestore().catch(console.error);
       }
     }, 900);
   }
@@ -206,7 +249,7 @@ export class GameComponent implements OnInit, OnDestroy {
       disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe(async (result: string | undefined) => {
+    dialogRef.afterClosed().subscribe((result: string | undefined) => {
       this.isDialogOpen = false;
 
       const name = (result ?? '').trim();
@@ -225,12 +268,7 @@ export class GameComponent implements OnInit, OnDestroy {
         this.game.currentPlayer = 0;
       }
 
-      // nach Änderung speichern
-      try {
-        await this.saveGameToFirestore();
-      } catch (e) {
-        console.error('saveGameToFirestore failed', e);
-      }
+      this.saveGameToFirestore().catch(console.error);
     });
   }
 
