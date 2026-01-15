@@ -4,7 +4,7 @@ import { isPlatformBrowser } from '@angular/common';
 
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatButtonModule } from '@angular/material/button'; // ✅ dazu
+import { MatButtonModule } from '@angular/material/button';
 
 import { ImprintDialogComponent } from './imprint-dialog/imprint-dialog.component';
 import { PrivacyDialogComponent } from './privacy-dialog/privacy-dialog.component';
@@ -12,7 +12,7 @@ import { PrivacyDialogComponent } from './privacy-dialog/privacy-dialog.componen
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, MatButtonModule], // ✅ dazu
+  imports: [RouterOutlet, MatButtonModule], 
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

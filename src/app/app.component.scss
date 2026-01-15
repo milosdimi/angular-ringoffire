@@ -3,13 +3,11 @@
   display: block;
 }
 
-/* Content bekommt unten Platz für den fixed Footer */
 .content {
   min-height: 100vh;
   padding-bottom: calc(var(--footer-height) + env(safe-area-inset-bottom));
 }
 
-/* Footer ist wirklich fixiert */
 .footer {
   position: fixed;
   left: 0;

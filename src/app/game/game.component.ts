@@ -272,7 +272,7 @@ export class GameComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // ✅ minimaler Fix: einmal casten (keine Helper-Funktion)
+
       const edited = result as { name: string; avatar: string };
 
       const name = (edited.name ?? '').trim();
