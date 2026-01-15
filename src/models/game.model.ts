@@ -10,6 +10,7 @@ export class GameModel {
   public currentCard: string = '';
   public lastMoveAt: number = 0; 
   public moveId: number = 0; 
+  public gameOver = false;
 
   constructor() {
     this.generateDeck();

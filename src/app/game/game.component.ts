@@ -22,7 +22,10 @@ import { GameInfoComponent } from '../game-info/game-info.component';
 import { DialogAddPlayerComponent } from '../dialog-add-player/dialog-add-player.component';
 import { DialogEditPlayerComponent } from '../dialog-edit-player/dialog-edit-player.component';
 
-type EditPlayerResult = { name: string; avatar: string } | undefined;
+type EditPlayerResult =
+  | { name: string; avatar: string }
+  | { remove: true }
+  | undefined;
 
 @Component({
   selector: 'app-game',
@@ -39,12 +42,10 @@ type EditPlayerResult = { name: string; avatar: string } | undefined;
   styleUrls: ['./game.component.scss'],
 })
 export class GameComponent implements OnInit, OnDestroy {
-  // UI-only animation (local), NOT stored in Firestore
   pickCardAnimation = false;
 
   game: GameModel = new GameModel();
 
-  // UI
   isMobile = false;
   isDialogOpen = false;
 
@@ -52,14 +53,11 @@ export class GameComponent implements OnInit, OnDestroy {
   private readonly isBrowser: boolean;
   private readonly PICK_MS = 900;
 
-  // Firestore
   private gameId = '';
   private gameSub?: Subscription;
 
-  // move event tracking (synced animation trigger)
   private lastSeenMoveId = 0;
 
-  // Avatar Pool (assets/img/profile/)
   private readonly avatars: string[] = [
     'cow.png',
     'death.png',
@@ -90,7 +88,6 @@ export class GameComponent implements OnInit, OnDestroy {
       this.gameId = id;
       this.gameSub?.unsubscribe();
 
-      // keep CSS & TS animation duration in sync
       if (this.isBrowser) {
         document.documentElement.style.setProperty(
           '--pick-ms',
@@ -106,18 +103,12 @@ export class GameComponent implements OnInit, OnDestroy {
     this.gameSub?.unsubscribe();
   }
 
-  /* =====================
-     Responsive (SSR-safe)
-     ===================== */
   @HostListener('window:resize')
   onResize(): void {
     if (!this.isBrowser) return;
     this.isMobile = window.innerWidth <= this.mobileWidth;
   }
 
-  /* =====================
-     Firestore: Listen + Save
-     ===================== */
   private listenToGameFromFirestore(): void {
     const ref = doc(this.firestore, `games/${this.gameId}`);
 
@@ -138,20 +129,19 @@ export class GameComponent implements OnInit, OnDestroy {
       this.game.lastMoveAt =
         typeof g.lastMoveAt === 'number' ? g.lastMoveAt : 0;
 
-      // Old docs safety: if deck missing, create one
-      if (this.game.stack.length === 0) {
+      this.game.gameOver = !!g.gameOver;
+
+      if (
+        this.game.stack.length === 0 &&
+        this.game.playedCard.length === 0 &&
+        !this.game.gameOver
+      ) {
         const fresh = new GameModel();
         this.game.stack = fresh.stack;
-        this.game.playedCard = [];
-        this.game.currentPlayer = 0;
-        this.game.currentCard = '';
-        this.game.moveId = 0;
-        this.game.lastMoveAt = 0;
         this.saveGameToFirestore().catch(console.error);
         return;
       }
 
-      // Start animation on all clients for a NEW move event
       if (this.game.moveId && this.game.moveId !== this.lastSeenMoveId) {
         this.lastSeenMoveId = this.game.moveId;
         this.playPickAnimation(this.game.lastMoveAt);
@@ -169,11 +159,10 @@ export class GameComponent implements OnInit, OnDestroy {
         stack: this.game.stack,
         playedCard: this.game.playedCard,
         currentPlayer: this.game.currentPlayer,
-
         currentCard: this.game.currentCard,
-
         moveId: this.game.moveId ?? 0,
         lastMoveAt: this.game.lastMoveAt ?? 0,
+        gameOver: this.game.gameOver ?? false,
       },
       updatedAt: Date.now(),
     };
@@ -181,9 +170,6 @@ export class GameComponent implements OnInit, OnDestroy {
     await setDoc(ref, payload, { merge: true });
   }
 
-  /* =====================
-     Animation (local UI only)
-     ===================== */
   private playPickAnimation(lastMoveAt: number): void {
     const lag = Date.now() - (lastMoveAt || Date.now());
     const delay = Math.max(0, 80 - lag);
@@ -196,45 +182,39 @@ export class GameComponent implements OnInit, OnDestroy {
     }, delay);
   }
 
-  /* =====================
-     Game Logic
-     ===================== */
   takeCard(): void {
     if (this.pickCardAnimation) return;
     if (this.game.players.length === 0) return;
     if (this.game.stack.length === 0) return;
+    if (this.game.gameOver) return;
 
     const card = this.game.stack.pop();
     if (!card) return;
 
-    // next player
     this.game.currentPlayer =
       (this.game.currentPlayer + 1) % this.game.players.length;
 
-    // shared move event
     this.game.currentCard = card;
     this.game.moveId = (this.game.moveId ?? 0) + 1;
     this.game.lastMoveAt = Date.now();
 
-    // save immediately so other clients can animate
     this.saveGameToFirestore().catch(console.error);
-
-    // local animation immediately
     this.playPickAnimation(this.game.lastMoveAt);
 
-    // after animation ends -> put card on discard pile and save
     setTimeout(() => {
       const last = this.game.playedCard[this.game.playedCard.length - 1];
       if (last !== this.game.currentCard) {
         this.game.playedCard.push(this.game.currentCard);
-        this.saveGameToFirestore().catch(console.error);
       }
+
+      if (this.game.stack.length === 0) {
+        this.game.gameOver = true;
+      }
+
+      this.saveGameToFirestore().catch(console.error);
     }, this.PICK_MS);
   }
 
-  /* =====================
-     Player Handling
-     ===================== */
   openAddPlayerDialog(): void {
     if (this.isDialogOpen) return;
 
@@ -284,17 +264,21 @@ export class GameComponent implements OnInit, OnDestroy {
       panelClass: 'game-dialog',
     });
 
-    dialogRef.afterClosed().subscribe(async (result) => {
+    dialogRef.afterClosed().subscribe(async (result: EditPlayerResult) => {
       if (!result) return;
 
-      // 🗑️ DELETE
-      if (result.remove) {
+      if ('remove' in result && result.remove) {
         await this.removePlayer(index);
         return;
       }
 
-      // ✏️ UPDATE
-      const { name, avatar } = result;
+      // ✅ minimaler Fix: einmal casten (keine Helper-Funktion)
+      const edited = result as { name: string; avatar: string };
+
+      const name = (edited.name ?? '').trim();
+      const avatar = edited.avatar;
+      if (!name) return;
+
       this.game.players[index] = { name, avatar };
       await this.saveGameToFirestore();
     });
@@ -317,5 +301,25 @@ export class GameComponent implements OnInit, OnDestroy {
     } catch (e) {
       console.error('saveGameToFirestore failed', e);
     }
+  }
+
+  get isGameOver(): boolean {
+    return this.game.gameOver === true;
+  }
+
+  async restartGame(): Promise<void> {
+    const fresh = new GameModel();
+
+    this.game.stack = fresh.stack;
+    this.game.playedCard = [];
+    this.game.currentPlayer = 0;
+
+    this.game.currentCard = '';
+    this.game.moveId = 0;
+    this.game.lastMoveAt = 0;
+
+    this.game.gameOver = false;
+
+    await this.saveGameToFirestore();
   }
 }

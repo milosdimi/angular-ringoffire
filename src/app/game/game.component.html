@@ -8,23 +8,20 @@
 
   <!-- GAME FIELD -->
   <section class="field" [class.mobile]="isMobile">
-    <div class="card-stack">
-
-      <!-- Karten im Stapel -->
-      <img *ngFor="let c of [0,1,2,3,4]; let i = index" class="stack-card" [style.right.px]="i * 5"
-        src="assets/img/cards/card_cover.png" alt="Card Cover" />
+    <div class="card-stack" [class.frozen]="isGameOver">
 
       <!-- Obere Karte / zum Ziehen -->
-      <img (click)="takeCard()" class="top-card" src="assets/img/cards/card_cover.png" alt="Top Card" />
+      <img (click)="!isGameOver && takeCard()" class="top-card" src="assets/img/cards/card_cover.png" alt="Top Card" />
 
       <!-- Ablagestapel: nur die letzte Karte anzeigen -->
-      <img *ngIf="game.playedCard.length" class="played-card"
+      <img *ngIf="game.playedCard.length && !isGameOver" class="played-card"
         [src]="'assets/img/cards/' + game.playedCard[game.playedCard.length - 1] + '.png'"
         alt="Discard Pile Top Card" />
 
       <!-- Animierte Karte -->
-      <img *ngIf="pickCardAnimation" class="pick-card" [src]="'assets/img/cards/' + game.currentCard + '.png'"
-        alt="Picked Card" />
+      <img *ngIf="pickCardAnimation && !isGameOver" class="pick-card"
+        [src]="'assets/img/cards/' + game.currentCard + '.png'" alt="Picked Card" />
+
     </div>
   </section>
 
@@ -38,5 +35,21 @@
     aria-label="Add player">
     <mat-icon>add</mat-icon>
   </button>
+
+  <!-- GAME OVER OVERLAY -->
+  <div class="gameover-overlay" *ngIf="isGameOver">
+    <div class="gameover-card">
+      <img class="gameover-img" src="assets/img/gameover.png" alt="Game Over">
+
+      <h2>Game Over</h2>
+      <p>Deck ist leer. Nochmal spielen?</p>
+
+      <div class="gameover-actions">
+        <button mat-raised-button color="primary" (click)="restartGame()">
+          Restart
+        </button>
+      </div>
+    </div>
+  </div>
 
 </div>
