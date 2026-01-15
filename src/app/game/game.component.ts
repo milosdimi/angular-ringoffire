@@ -20,6 +20,9 @@ import { GameModel, Player } from '../../models/game.model';
 import { PlayerComponent } from '../player/player.component';
 import { GameInfoComponent } from '../game-info/game-info.component';
 import { DialogAddPlayerComponent } from '../dialog-add-player/dialog-add-player.component';
+import { DialogEditPlayerComponent } from '../dialog-edit-player/dialog-edit-player.component';
+
+type EditPlayerResult = { name: string; avatar: string } | undefined;
 
 @Component({
   selector: 'app-game',
@@ -36,9 +39,12 @@ import { DialogAddPlayerComponent } from '../dialog-add-player/dialog-add-player
   styleUrls: ['./game.component.scss'],
 })
 export class GameComponent implements OnInit, OnDestroy {
+  // UI-only animation (local), NOT stored in Firestore
   pickCardAnimation = false;
+
   game: GameModel = new GameModel();
 
+  // UI
   isMobile = false;
   isDialogOpen = false;
 
@@ -46,11 +52,14 @@ export class GameComponent implements OnInit, OnDestroy {
   private readonly isBrowser: boolean;
   private readonly PICK_MS = 900;
 
+  // Firestore
   private gameId = '';
   private gameSub?: Subscription;
 
+  // move event tracking (synced animation trigger)
   private lastSeenMoveId = 0;
 
+  // Avatar Pool (assets/img/profile/)
   private readonly avatars: string[] = [
     'cow.png',
     'death.png',
@@ -81,6 +90,7 @@ export class GameComponent implements OnInit, OnDestroy {
       this.gameId = id;
       this.gameSub?.unsubscribe();
 
+      // keep CSS & TS animation duration in sync
       if (this.isBrowser) {
         document.documentElement.style.setProperty(
           '--pick-ms',
@@ -128,6 +138,7 @@ export class GameComponent implements OnInit, OnDestroy {
       this.game.lastMoveAt =
         typeof g.lastMoveAt === 'number' ? g.lastMoveAt : 0;
 
+      // Old docs safety: if deck missing, create one
       if (this.game.stack.length === 0) {
         const fresh = new GameModel();
         this.game.stack = fresh.stack;
@@ -140,6 +151,7 @@ export class GameComponent implements OnInit, OnDestroy {
         return;
       }
 
+      // Start animation on all clients for a NEW move event
       if (this.game.moveId && this.game.moveId !== this.lastSeenMoveId) {
         this.lastSeenMoveId = this.game.moveId;
         this.playPickAnimation(this.game.lastMoveAt);
@@ -180,7 +192,6 @@ export class GameComponent implements OnInit, OnDestroy {
 
     setTimeout(() => {
       this.pickCardAnimation = true;
-
       setTimeout(() => (this.pickCardAnimation = false), this.PICK_MS);
     }, delay);
   }
@@ -196,17 +207,22 @@ export class GameComponent implements OnInit, OnDestroy {
     const card = this.game.stack.pop();
     if (!card) return;
 
+    // next player
     this.game.currentPlayer =
       (this.game.currentPlayer + 1) % this.game.players.length;
 
+    // shared move event
     this.game.currentCard = card;
     this.game.moveId = (this.game.moveId ?? 0) + 1;
     this.game.lastMoveAt = Date.now();
 
+    // save immediately so other clients can animate
     this.saveGameToFirestore().catch(console.error);
 
+    // local animation immediately
     this.playPickAnimation(this.game.lastMoveAt);
 
+    // after animation ends -> put card on discard pile and save
     setTimeout(() => {
       const last = this.game.playedCard[this.game.playedCard.length - 1];
       if (last !== this.game.currentCard) {
@@ -252,6 +268,39 @@ export class GameComponent implements OnInit, OnDestroy {
       }
 
       this.saveGameToFirestore().catch(console.error);
+    });
+  }
+
+  openEditPlayerDialog(index: number): void {
+    const player = this.game.players[index];
+
+    const dialogRef = this.dialog.open(DialogEditPlayerComponent, {
+      width: 'min(520px, calc(100vw - 24px))',
+      maxWidth: '520px',
+      data: {
+        name: player.name,
+        avatar: player.avatar,
+      },
+      panelClass: 'game-dialog',
+    });
+
+    dialogRef.afterClosed().subscribe(async (result: EditPlayerResult) => {
+      if (!result) return;
+
+      const name = (result.name ?? '').trim();
+      const avatar = result.avatar;
+
+      if (!name) return;
+
+      // update local state
+      this.game.players[index] = { name, avatar };
+
+      // persist
+      try {
+        await this.saveGameToFirestore();
+      } catch (e) {
+        console.error('Failed to save edited player', e);
+      }
     });
   }
 

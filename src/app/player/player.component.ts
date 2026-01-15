@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 
 @Component({
   selector: 'app-player',
@@ -10,9 +10,10 @@ export class PlayerComponent {
   @Input() name: string = '';
   @Input() avatar: string = 'man.png';
   @Input() playerActive: boolean = false;
-
-
   @Input() compact: boolean = false;
+
+  // ✅ neu
+  @Output() edit = new EventEmitter<void>();
 
   get avatarSrc(): string {
     return `assets/img/profile/${this.avatar}`;

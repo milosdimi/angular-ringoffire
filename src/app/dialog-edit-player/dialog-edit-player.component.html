@@ -1,0 +1,28 @@
+<h2>Edit Player</h2>
+
+<div class="content">
+  <label>Name</label>
+  <input
+    matInput
+    [(ngModel)]="name"
+    placeholder="Player name"
+    maxlength="20"
+  />
+
+  <label>Avatar</label>
+  <div class="avatars">
+    <img
+      *ngFor="let a of avatars"
+      [src]="'assets/img/profile/' + a"
+      [class.active]="a === avatar"
+      (click)="avatar = a"
+    />
+  </div>
+</div>
+
+<div class="actions">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="!name">
+    Save
+  </button>
+</div>

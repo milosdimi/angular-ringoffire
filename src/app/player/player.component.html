@@ -1,11 +1,18 @@
-<div class="player" [class.player-active]="playerActive" [class.compact]="compact">
+<div
+  class="player"
+  [class.player-active]="playerActive"
+  [class.compact]="compact"
+  (click)="edit.emit()"
+  role="button"
+  tabindex="0"
+>
   <img [src]="avatarSrc" [alt]="name" />
 
   @if (!compact) {
-  <span class="name">{{ name }}</span>
+    <span class="name">{{ name }}</span>
   }
 
   @if (compact) {
-  <span class="initials">{{ initials }}</span>
+    <span class="initials">{{ initials }}</span>
   }
 </div>

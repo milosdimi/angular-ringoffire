@@ -2,13 +2,8 @@
 
   <!-- PLAYER LIST -->
   <div class="players">
-    <app-player
-      *ngFor="let p of game.players; let i = index"
-      [name]="p.name"
-      [avatar]="p.avatar"
-      [playerActive]="i === game.currentPlayer"
-      [compact]="isMobile">
-    </app-player>
+    <app-player *ngFor="let p of game.players; let i = index" [name]="p.name" [avatar]="p.avatar"
+      [playerActive]="i === game.currentPlayer" [compact]="isMobile" (edit)="openEditPlayerDialog(i)"></app-player>
   </div>
 
   <!-- GAME FIELD -->
@@ -16,37 +11,20 @@
     <div class="card-stack">
 
       <!-- Karten im Stapel -->
-      <img
-        *ngFor="let c of [0,1,2,3,4]; let i = index"
-        class="stack-card"
-        [style.right.px]="i * 5"
-        src="assets/img/cards/card_cover.png"
-        alt="Card Cover"
-      />
+      <img *ngFor="let c of [0,1,2,3,4]; let i = index" class="stack-card" [style.right.px]="i * 5"
+        src="assets/img/cards/card_cover.png" alt="Card Cover" />
 
       <!-- Obere Karte / zum Ziehen -->
-      <img
-        (click)="takeCard()"
-        class="top-card"
-        src="assets/img/cards/card_cover.png"
-        alt="Top Card"
-      />
+      <img (click)="takeCard()" class="top-card" src="assets/img/cards/card_cover.png" alt="Top Card" />
 
       <!-- Ablagestapel: nur die letzte Karte anzeigen -->
-      <img
-        *ngIf="game.playedCard.length"
-        class="played-card"
+      <img *ngIf="game.playedCard.length" class="played-card"
         [src]="'assets/img/cards/' + game.playedCard[game.playedCard.length - 1] + '.png'"
-        alt="Discard Pile Top Card"
-      />
+        alt="Discard Pile Top Card" />
 
       <!-- Animierte Karte -->
-      <img
-        *ngIf="pickCardAnimation"
-        class="pick-card"
-        [src]="'assets/img/cards/' + game.currentCard + '.png'"
-        alt="Picked Card"
-      />
+      <img *ngIf="pickCardAnimation" class="pick-card" [src]="'assets/img/cards/' + game.currentCard + '.png'"
+        alt="Picked Card" />
     </div>
   </section>
 
@@ -56,13 +34,8 @@
   </div>
 
   <!-- ADD PLAYER BUTTON -->
-  <button
-    mat-fab
-    class="add-player-button game-fab"
-    (click)="openAddPlayerDialog()"
-    [disabled]="isDialogOpen"
-    aria-label="Add player"
-  >
+  <button mat-fab class="add-player-button game-fab" (click)="openAddPlayerDialog()" [disabled]="isDialogOpen"
+    aria-label="Add player">
     <mat-icon>add</mat-icon>
   </button>
 
