@@ -1,7 +1,11 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogRef,
+  MatDialogModule,
+} from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 
@@ -48,5 +52,8 @@ export class DialogEditPlayerComponent {
 
   cancel(): void {
     this.dialogRef.close();
+  }
+  remove(): void {
+    this.dialogRef.close({ remove: true });
   }
 }

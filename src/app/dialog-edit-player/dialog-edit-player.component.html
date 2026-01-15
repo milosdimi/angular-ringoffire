@@ -2,25 +2,22 @@
 
 <div class="content">
   <label>Name</label>
-  <input
-    matInput
-    [(ngModel)]="name"
-    placeholder="Player name"
-    maxlength="20"
-  />
+  <input matInput [(ngModel)]="name" placeholder="Player name" maxlength="20" />
 
   <label>Avatar</label>
   <div class="avatars">
-    <img
-      *ngFor="let a of avatars"
-      [src]="'assets/img/profile/' + a"
-      [class.active]="a === avatar"
-      (click)="avatar = a"
-    />
+    <img *ngFor="let a of avatars" [src]="'assets/img/profile/' + a" [class.active]="a === avatar"
+      (click)="avatar = a" />
   </div>
 </div>
 
 <div class="actions">
+  <button mat-button color="warn" (click)="remove()">
+    Delete
+  </button>
+
+  <span class="spacer"></span>
+
   <button mat-button (click)="cancel()">Cancel</button>
   <button mat-raised-button color="primary" (click)="save()" [disabled]="!name">
     Save

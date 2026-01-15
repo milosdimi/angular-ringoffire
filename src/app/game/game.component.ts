@@ -284,23 +284,19 @@ export class GameComponent implements OnInit, OnDestroy {
       panelClass: 'game-dialog',
     });
 
-    dialogRef.afterClosed().subscribe(async (result: EditPlayerResult) => {
+    dialogRef.afterClosed().subscribe(async (result) => {
       if (!result) return;
 
-      const name = (result.name ?? '').trim();
-      const avatar = result.avatar;
-
-      if (!name) return;
-
-      // update local state
-      this.game.players[index] = { name, avatar };
-
-      // persist
-      try {
-        await this.saveGameToFirestore();
-      } catch (e) {
-        console.error('Failed to save edited player', e);
+      // 🗑️ DELETE
+      if (result.remove) {
+        await this.removePlayer(index);
+        return;
       }
+
+      // ✏️ UPDATE
+      const { name, avatar } = result;
+      this.game.players[index] = { name, avatar };
+      await this.saveGameToFirestore();
     });
   }
 
