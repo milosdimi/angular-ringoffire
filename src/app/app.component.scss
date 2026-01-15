@@ -1,0 +1,77 @@
+:host {
+  --footer-height: 48px;
+  display: block;
+}
+
+/* Content bekommt unten Platz für den fixed Footer */
+.content {
+  min-height: 100vh;
+  padding-bottom: calc(var(--footer-height) + env(safe-area-inset-bottom));
+}
+
+/* Footer ist wirklich fixiert */
+.footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: var(--footer-height);
+  padding: 0 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 10;
+}
+
+.left {
+  opacity: 0.65;
+  white-space: nowrap;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.footer-btn {
+  font-size: 12px;
+  padding: 0 10px;
+  min-width: unset;
+  height: 28px;
+  line-height: 28px;
+
+  border-radius: 999px;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.footer-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+@media (max-width: 480px) {
+  :host {
+    --footer-height: 64px;
+  }
+
+  .footer {
+    height: auto;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .right {
+    gap: 4px;
+  }
+}

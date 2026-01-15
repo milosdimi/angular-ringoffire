@@ -1,1 +1,13 @@
-<router-outlet></router-outlet>
+<main class="content">
+  <router-outlet></router-outlet>
+</main>
+
+<footer class="footer">
+  <span class="left">© {{ year }} Ring of Fire</span>
+
+  <span class="right">
+    <button mat-button class="footer-btn" (click)="openImprint()">Impressum</button>
+    <button mat-button class="footer-btn" (click)="openPrivacy()">Datenschutz</button>
+  </span>
+</footer>
+

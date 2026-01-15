@@ -1,7 +1,7 @@
 .game-info-card {
   position: fixed;
   left: 50%;
-  bottom: calc(20px + env(safe-area-inset-bottom));
+  bottom: calc(77px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   z-index: 1000;
   width: min(820px, calc(100vw - 24px));
